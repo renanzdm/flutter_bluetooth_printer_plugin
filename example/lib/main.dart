@@ -1,8 +1,13 @@
-import 'dart:async';
+
+
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bluetooth_printer/flutter_bluetooth_printer.dart';
+import 'package:flutter_bluetooth_printer_example/resume_ticket.dart';
+import 'package:webcontent_converter/webcontent_converter.dart';
+
+import 'esc_printer_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,32 +22,14 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final List<BluetoothDevice> _devices = [];
+  final BluetoothPrinter _printer = BluetoothPrinter();
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    //List<BluetoothDevice> platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-    try {
-      //platformVersion = await BluetoothPrinter.instance.getBondedDevices();
-    } on PlatformException {
-      //platformVersion = [];
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    // setState(() {
-    //   _devices = platformVersion;
-    // });
+    _printer.scanResults.listen((event) {
+      print(event);
+    });
   }
 
   @override
@@ -52,10 +39,42 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
+        floatingActionButton: FloatingActionButton(
+          child: const Icon(Icons.search),
+          onPressed: () async {
+          var per =  await _printer.isEnabled();
+          print(per);
+            await _printer.startScan();
+          },
+        ),
         body: Center(
-          child: Text('Running on: $_devices\n'),
+          child: StreamBuilder<List<BluetoothDevice>>(
+            stream: _printer.scanResults,
+            builder: (context, snapshot) {
+              return ListView.builder(
+                itemCount: snapshot.data?.length ?? 0,
+                itemBuilder: (_, index) => ListTile(
+                  title: Text(snapshot.data?[index].name ?? ''),
+                  onTap: () async {
+
+                    var device = snapshot.data![index];
+                    await device.connect();
+                    if (device.isConnected) {
+                         final content = ResumeTicket.resumeTicket();
+                  var bytes = await WebcontentConverter.contentToImage(content: content);
+                      var service = ESCPrinterService(receipt:bytes);
+                      var data =await service.getBytes(paperSize: PaperSize.mm80);
+                      device.printBytes(bytes: Uint8List.fromList(data));
+                    }
+                  },
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
   }
 }
+
+

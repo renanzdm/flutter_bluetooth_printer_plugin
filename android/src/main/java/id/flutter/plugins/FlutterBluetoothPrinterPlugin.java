@@ -2,6 +2,7 @@ package id.flutter.plugins;
 
 import static android.os.Build.VERSION.SDK_INT;
 
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -12,48 +13,63 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import io.flutter.embedding.engine.FlutterEngine;
+import io.flutter.embedding.engine.dart.DartExecutor;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.embedding.engine.plugins.broadcastreceiver.BroadcastReceiverAware;
+import io.flutter.embedding.engine.plugins.broadcastreceiver.BroadcastReceiverPluginBinding;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 
-public class FlutterBluetoothPrinterPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler {
+public class FlutterBluetoothPrinterPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler, BroadcastReceiverAware {
     private MethodChannel channel;
     private Activity activity;
 
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothSocket bluetoothSocket;
     private OutputStream writeStream;
-
+    private IntentFilter filter;
     private BluetoothDevice connectedDevice;
     private Map<String, BluetoothDevice> discoveredDevices = new HashMap<>();
+    final int REQUEST_CODE = 111111;
+
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
+
         channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "id.flutter.plugins/bluetooth_printer");
         channel.setMethodCallHandler(this);
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         flutterPluginBinding.getApplicationContext().registerReceiver(receiver, filter);
+
+
     }
 
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -212,17 +228,19 @@ public class FlutterBluetoothPrinterPlugin implements FlutterPlugin, ActivityAwa
         result.success(isEnabled);
     }
 
-    private boolean isPermitted(MethodChannel.Result result) {
-        if (SDK_INT < 23) {
+    private boolean isPermitted(Result result) {
+        String[] permissions = {Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.ACCESS_FINE_LOCATION};
+        if (SDK_INT >= Build.VERSION_CODES.M) {
+            activity.requestPermissions(permissions, 1);
+            final int res = activity.checkSelfPermission(Manifest.permission.BLUETOOTH);
+            final int per = activity.checkSelfPermission(Manifest.permission.BLUETOOTH_ADMIN);
+            final  int per1 = activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+            if (res != PackageManager.PERMISSION_GRANTED && per != PackageManager.PERMISSION_GRANTED&& per1 != PackageManager.PERMISSION_GRANTED) {
+                result.error("permission_denied", "Permission denied", null);
+                return false;
+            }
             return true;
         }
-
-        final int res = activity.checkSelfPermission("android.permission.BLUETOOTH");
-        if (res != PackageManager.PERMISSION_GRANTED) {
-            result.error("permission_denied", "Permission denied", null);
-            return false;
-        }
-
         return true;
     }
 
@@ -234,6 +252,8 @@ public class FlutterBluetoothPrinterPlugin implements FlutterPlugin, ActivityAwa
     @Override
     public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
         activity = binding.getActivity();
+        activity.registerReceiver(receiver, filter);
+
     }
 
     @Override
@@ -250,4 +270,16 @@ public class FlutterBluetoothPrinterPlugin implements FlutterPlugin, ActivityAwa
     public void onDetachedFromActivity() {
         activity = null;
     }
+
+
+    @Override
+    public void onAttachedToBroadcastReceiver(@NonNull BroadcastReceiverPluginBinding binding) {
+    }
+
+    @Override
+    public void onDetachedFromBroadcastReceiver() {
+
+    }
+
+
 }
