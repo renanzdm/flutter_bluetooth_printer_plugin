@@ -11,7 +11,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>flutter_bluetooth_printer_example</string>
+	<string>example</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -41,5 +41,16 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<!--
+	down permissions necessary
+-->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+<string>The app uses bluetooth to find, connect and transfer data between different devices</string>
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>The app uses bluetooth to find, connect and transfer data between different devices</string>
+<key>UIBackgroundModes</key>
+<array>
+<string>bluetooth-central</string>
+</array>
 </dict>
 </plist>

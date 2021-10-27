@@ -1,6 +1,6 @@
-# flutter_bluetooth_printer_example
+# example
 
-Demonstrates how to use the flutter_bluetooth_printer plugin.
+A new Flutter project.
 
 ## Getting Started
 
