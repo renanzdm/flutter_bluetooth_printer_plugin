@@ -31,12 +31,15 @@
         [Manager didUpdateState:^(NSInteger state) {
             switch (state) {
                 case CBManagerStateUnsupported:
+                   elf->_isAvailable = false;
                     NSLog(@"The platform/hardware doesn't support Bluetooth Low Energy.");
                     break;
                 case CBManagerStateUnauthorized:
+                    elf->_isAvailable = false;
                     NSLog(@"The app is not authorized to use Bluetooth Low Energy.");
                     break;
                 case CBManagerStatePoweredOff:
+                    self->_isAvailable = false;
                     NSLog(@"Bluetooth is currently powered off.");
                     break;
                 case CBManagerStatePoweredOn:
