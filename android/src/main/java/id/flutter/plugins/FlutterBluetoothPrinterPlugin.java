@@ -103,30 +103,55 @@ public class FlutterBluetoothPrinterPlugin implements FlutterPlugin, ActivityAwa
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
         final String method = call.method;
         switch (method) {
-            case "isEnabled":
+            case "isEnabled": {
                 isEnabled(result);
                 break;
+            }
+                
 
-            case "startScan":
+            case "startScan": {
                 if (!bluetoothAdapter.isDiscovering()) {
                     discoveredDevices.clear();
                     bluetoothAdapter.startDiscovery();
+
+                    Set<BluetoothDevice> bonded = bluetoothAdapter.getBondedDevices();
+                    for (BluetoothDevice device : bonded) {
+                        final Map<String, Object> map = deviceToMap(device);
+                        channel.invokeMethod("onDiscovered", map);
+                        discoveredDevices.put(device.getAddress(), device);
+                    }
                 }
                 result.success(true);
                 break;
+            }
 
-            case "stopScan":
+            case "getDevice": {
+                String address = call.argument("address");
+                final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
+                if (device != null){
+                    final Map<String, Object> map = deviceToMap(device);
+                    result.success(map);
+                    return;
+                }
+                
+                result.success(null);
+                break;
+            }
+
+            case "stopScan": {
                 if (bluetoothAdapter.isDiscovering()) {
                     bluetoothAdapter.cancelDiscovery();
                 }
                 result.success(true);
                 break;
+            }
 
-            case "isConnected":
+            case "isConnected": {
                 result.success(connectedDevice != null);
                 break;
+            }
 
-            case "connectedDevice":
+            case "connectedDevice": {
                 if (connectedDevice != null) {
                     result.success(deviceToMap(connectedDevice));
                     return;
@@ -134,8 +159,9 @@ public class FlutterBluetoothPrinterPlugin implements FlutterPlugin, ActivityAwa
 
                 result.success(null);
                 break;
+            }
 
-            case "connect":
+            case "connect": {
                 AsyncTask.execute(() -> {
                     try {
                         String address = call.argument("address");
@@ -160,8 +186,9 @@ public class FlutterBluetoothPrinterPlugin implements FlutterPlugin, ActivityAwa
                 });
 
                 break;
+            }
 
-            case "disconnect":
+            case "disconnect": {
                 AsyncTask.execute(() -> {
                     try {
                         writeStream.close();
@@ -182,6 +209,7 @@ public class FlutterBluetoothPrinterPlugin implements FlutterPlugin, ActivityAwa
                     }
                 });
                 break;
+            }
 
             case "print": {
                 if (connectedDevice == null) {

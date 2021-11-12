@@ -31,11 +31,11 @@
         [Manager didUpdateState:^(NSInteger state) {
             switch (state) {
                 case CBManagerStateUnsupported:
-                   elf->_isAvailable = false;
+                   self->_isAvailable = false;
                     NSLog(@"The platform/hardware doesn't support Bluetooth Low Energy.");
                     break;
                 case CBManagerStateUnauthorized:
-                    elf->_isAvailable = false;
+                    self->_isAvailable = false;
                     NSLog(@"The app is not authorized to use Bluetooth Low Energy.");
                     break;
                 case CBManagerStatePoweredOff:
@@ -99,7 +99,6 @@
   } else if ([@"connect" isEqualToString:call.method]){
       NSDictionary *device = [call arguments];
       @try {
-        NSLog(@"connect device begin -> %@", [device objectForKey:@"name"]);
         CBPeripheral *peripheral = [_scannedPeripherals objectForKey:[device objectForKey:@"address"]];
         
         __weak typeof(self) weakSelf = self;
@@ -129,6 +128,17 @@
         
       } @catch(FlutterError *e) {
         result(e);
+      }
+  } else if ([@"getDevice" isEqualToString:call.method]){
+      NSDictionary *device = [call arguments];
+      @try {
+        CBPeripheral *peripheral = [_scannedPeripherals objectForKey:[device objectForKey:@"address"]];
+        if (peripheral != nil){
+            NSDictionary *map = [self deviceToMap:peripheral];
+            result(map);
+        }
+      } @catch(FlutterError *e) {
+        result(nil);
       }
   } else if ([@"disconnect" isEqualToString:call.method]){
       @try {
@@ -169,7 +179,8 @@
 
 -(void)updateConnectState:(ConnectState)state {
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSNumber *ret = @0;
+        NSNumber *ret;
+        
         switch (state) {
             case CONNECT_STATE_CONNECTING:
                 NSLog(@"status -> %@", @"Connecting ...");

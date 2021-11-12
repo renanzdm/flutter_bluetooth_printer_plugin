@@ -1,3 +1,15 @@
+## 1.1.8
+
+* 2021-11-04: fix java code
+## 1.1.7
+
+* 2021-11-03: added getDevice by address method
+## 1.1.6
+
+* 2021-10-31: retrieve bonded devices on android
+## 1.1.5
+
+* 2021-10-30: refactor objc code
 ## 1.1.4
 
 * 2021-09-25: remove dotsPerLine
