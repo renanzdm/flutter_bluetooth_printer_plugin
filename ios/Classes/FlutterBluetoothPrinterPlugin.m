@@ -41,14 +41,12 @@
                 case CBManagerStatePoweredOff:
                     self->_isAvailable = false;
                       @try {
-                            if (_connectedDevice != nil){
-                                [[Manager bleConnecter] closePeripheral:_connectedDevice];
-                                _connectedDevice = nil;
+                          if (self->_connectedDevice != nil){
+                              [[Manager bleConnecter] closePeripheral:self->_connectedDevice];
+                                self->_connectedDevice = nil;
                             }
                             
-                            result(@(YES));
                         } @catch(FlutterError *e) {
-                            result(e);
                         }
                     NSLog(@"Bluetooth is currently powered off.");
                     break;
