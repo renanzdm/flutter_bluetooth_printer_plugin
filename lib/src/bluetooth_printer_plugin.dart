@@ -80,6 +80,8 @@ class BluetoothPrinter {
         isConnected: dev['is_connected'],
         printer: this,
       );
+    }else{
+      return null;
     }
   }
 
