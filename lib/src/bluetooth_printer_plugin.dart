@@ -67,11 +67,12 @@ class BluetoothPrinter {
     if (idx >= 0) {
       return _devices[idx];
     }
-    try {
-      final dev = await _channel.invokeMethod('getDevice', {
+
+    final dev = await _channel.invokeMethod('getDevice', {
       'address': address,
     });
-     if (dev != null) {
+
+    if (dev != null) {
       return BluetoothDevice._internal(
         name: dev['name'],
         address: dev['address'],
@@ -79,13 +80,7 @@ class BluetoothPrinter {
         isConnected: dev['is_connected'],
         printer: this,
       );
-    }else{
-      return null;
     }
-    } catch (e,s) {
-      log('error on getDeviceByAddress',error: e,stackTrace: s);
-      return null;
-    }  
   }
 
   Future<BluetoothDevice?> getConnectedDevice() async {
