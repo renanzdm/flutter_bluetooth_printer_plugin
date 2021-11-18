@@ -6,6 +6,7 @@
 library bluetooth_printer;
 
 import 'dart:async';
+import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:esc_pos_utils_plus/esc_pos_utils.dart';
