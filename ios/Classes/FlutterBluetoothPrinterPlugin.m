@@ -144,6 +144,8 @@
         if (peripheral != nil){
             NSDictionary *map = [self deviceToMap:peripheral];
             result(map);
+        }else{
+            result(nil);
         }
       } @catch(FlutterError *e) {
         result(nil);
